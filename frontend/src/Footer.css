@@ -1,0 +1,15 @@
+.footer {
+  background-color: #f5f6f8; /* light grey */
+  color: #212529;
+}
+
+.footer-link {
+  color: #495057;
+  text-decoration: none;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.footer-link:hover {
+  color: #0d6efd;
+}

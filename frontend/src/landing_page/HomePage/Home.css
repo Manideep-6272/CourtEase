@@ -1,0 +1,11 @@
+.search-bar {
+  max-width: 850px;
+  width: 100%;
+}
+.card:hover {
+  transform: translateY(-6px);
+  transition: 0.3s ease;
+}
+.sports{
+    margin-left: 12rem;
+}

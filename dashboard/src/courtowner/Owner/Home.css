@@ -1,0 +1,79 @@
+.owner-home {
+  max-width: 1100px;
+}
+
+.owner-welcome-card {
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+}
+.stat-card {
+  border-radius: 14px;
+  min-height: 110px;
+  display: flex;
+  align-items: center;
+}
+.table thead th {
+  font-weight: 600;
+}
+
+.badge {
+  font-size: 12px;
+  padding: 6px 10px;
+}
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-card {
+  background: #fff;
+  padding: 24px;
+  border-radius: 12px;
+  width: 420px;
+}
+
+.courts-wrapper {
+  max-width: 1000px;
+}
+
+
+.court-card {
+  min-width: 320px;    /* prevents skinny cards */
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-card {
+  background: #fff;
+  padding: 24px;
+  border-radius: 12px;
+  width: 420px;
+}
+table th {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+table td {
+  white-space: nowrap;
+}
+.card h3 {
+  letter-spacing: 0.5px;
+}
+.form-control {
+  border-radius: 8px;
+}

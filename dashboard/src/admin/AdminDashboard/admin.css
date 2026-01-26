@@ -1,0 +1,15 @@
+.small-card .card-body {
+  padding: 16px;
+}
+
+.small {
+  font-size: 0.85rem;
+}
+table th {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+table td {
+  white-space: nowrap;
+}
