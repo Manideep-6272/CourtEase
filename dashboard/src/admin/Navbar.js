@@ -8,7 +8,7 @@ function Navbar() {
     >
       <div className="container p-1">
         {/* Logo */}
-        <Link className="navbar-brand" to="/">
+        <Link className="navbar-brand" to="/admin">
           <img src="./Logo.png" style={{ width: "15%" }} alt="Logo" />
         </Link>
         <button
@@ -29,27 +29,27 @@ function Navbar() {
             style={{ color: "black", fontSize: "17px" }}
           >
             <li className="nav-item">
-              <Link className="nav-link fw-semibold" to="/">
+              <Link className="nav-link fw-semibold" to="/admin">
                 Overview
               </Link>
             </li>
             <li className="nav-item">
-              <Link className="nav-link fw-semibold text-nowrap" to="/users">
+              <Link className="nav-link fw-semibold text-nowrap" to="/admin/getusers">
                 Users
               </Link>
             </li>
             <li className="nav-item">
-              <Link className="nav-link fw-semibold" to="/owners">
+              <Link className="nav-link fw-semibold" to="/admin/getowners">
                 Owners
               </Link>
             </li>
             <li className="nav-item">
-              <Link className="nav-link fw-semibold" to="/requests">
+              <Link className="nav-link fw-semibold" to="/admin/requests">
                 Requests
               </Link>
             </li>
             <li className="nav-item">
-              <Link className="nav-link fw-semibold" to="/profile">
+              <Link className="nav-link fw-semibold" to="/admin/profile">
                 Profile
               </Link>
             </li>

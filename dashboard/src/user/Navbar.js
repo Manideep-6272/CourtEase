@@ -8,7 +8,7 @@ function Navbar() {
     >
       <div className="container p-1">
         {/* Logo */}
-        <Link className="navbar-brand" to="/">
+        <Link className="navbar-brand" to="/users">
           <img src="./Logo.png" style={{ width: "15%" }} alt="Logo" />
         </Link>
         <button
@@ -26,17 +26,17 @@ function Navbar() {
         <div className="collapse navbar-collapse" id="navbarSupportedContent">
           <ul className="navbar-nav mx-auto align-items-center" style={{color:"black",fontSize:'17px'}}>
             <li className="nav-item mx-2">
-              <Link className="nav-link fw-semibold" to="/">
+              <Link className="nav-link fw-semibold" to="/users">
                 Home
               </Link>
             </li>
             <li className="nav-item mx-2">
-              <Link className="nav-link fw-semibold" to="/mybookings">
+              <Link className="nav-link fw-semibold" to="/users/mybookings">
                 My Bookings
               </Link>
             </li>
             <li className="nav-item mx-2">
-              <Link className="nav-link fw-semibold" to="/profile">
+              <Link className="nav-link fw-semibold" to="/users/profile">
                 Profile
               </Link>
             </li>

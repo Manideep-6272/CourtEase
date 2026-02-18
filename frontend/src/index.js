@@ -8,6 +8,7 @@ import Home from './landing_page/HomePage/Home';
 import Login from './landing_page/Signup/Login';
 import Register from './landing_page/Signup/Register';
 import Contact from './landing_page/Contact/Contact';
+// import './index.css';
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <BrowserRouter>

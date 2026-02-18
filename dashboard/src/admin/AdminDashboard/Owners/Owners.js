@@ -1,39 +1,46 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "../admin.css";
+import axios from "axios";
 function Owners() {
-  const [owners] = useState([
-    {
-      id: 1,
-      name: "Aman Kumar",
-      email: "aman@gmail.com",
-      phone: "9876543210",
-      city: "Bengaluru",
-      courts: 3,
-      status: "Active",
-      verified: "Yes",
-    },
-    {
-      id: 2,
-      name: "Rahul Sharma",
-      email: "rahul@gmail.com",
-      phone: "9123456789",
-      city: "Mumbai",
-      courts: 1,
-      status: "Inactive",
-      verified: "No",
-    },
-    {
-      id: 3,
-      name: "Neha Singh",
-      email: "neha@gmail.com",
-      phone: "9988776655",
-      city: "Delhi",
-      courts: 2,
-      status: "Active",
-      verified: "Yes",
-    },
-  ]);
-
+  const [owners,setowners] = useState([]);
+  useEffect(()=>{
+    fetchOwners();
+  },[]);
+  const fetchOwners = async ()=>{
+    try{
+      const token = localStorage.getItem("token");
+      const owners = await axios.get(
+        "http://localhost:5000/admin/fetchowners",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+      setowners(owners.data);
+    }
+    catch (error) {
+      console.error(error);
+    }
+  }
+  const updateStatus = async (ownerId,ownerStatus)=>{
+    try{
+      const token = localStorage.getItem("token");
+      const newStatus = ownerStatus === 'approved' ? 'pending' : 'approved';
+      await axios.put(
+        `http://localhost:5000/admin/owners/${ownerId}/updateStatus`,{status : newStatus},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
+      fetchOwners();
+    }
+    catch(err){
+      console.log(err);
+    }
+  }
   return (
     <div className="container-lg mt-4">
 
@@ -81,9 +88,9 @@ function Owners() {
               <tr>
                 <th>Name</th>
                 <th>Contact</th>
-                <th>City</th>
+                {/* <th>City</th> */}
                 <th>Courts</th>
-                <th>Verified</th>
+                {/* <th>Verified</th> */}
                 <th>Status</th>
                 <th>Action</th>
               </tr>
@@ -94,12 +101,11 @@ function Owners() {
                 <tr key={owner.id}>
                   <td>{owner.name}</td>
                   <td>
-                    <div>{owner.email}</div>
-                    <small className="text-muted">{owner.phone}</small>
+                    <div>{owner.phone}</div>
                   </td>
-                  <td>{owner.city}</td>
+                  {/* <td>{owner.city}</td> */}
                   <td className="fw-semibold">{owner.courts}</td>
-                  <td>
+                  {/* <td>
                     <span
                       className={`badge ${
                         owner.verified === "Yes"
@@ -109,30 +115,30 @@ function Owners() {
                     >
                       {owner.verified}
                     </span>
-                  </td>
+                  </td> */}
                   <td>
                     <span
                       className={`badge ${
-                        owner.status === "Active"
+                        owner.approval_status === "approved"
                           ? "bg-success"
                           : "bg-secondary"
                       }`}
                     >
-                      {owner.status}
+                      {owner.approval_status}
                     </span>
                   </td>
                   <td>
-                    <button className="btn btn-outline-primary btn-sm me-2">
+                    {/* <button className="btn btn-outline-primary btn-sm me-2">
                       View
-                    </button>
-                    <button
+                    </button> */}
+                    <button onClick={()=>updateStatus(owner.id,owner.approval_status)}
                       className={`btn btn-sm ${
-                        owner.status === "Active"
+                        owner.approval_status === "approved"
                           ? "btn-outline-danger"
                           : "btn-outline-success"
                       }`}
                     >
-                      {owner.status === "Active" ? "Disable" : "Enable"}
+                      {owner.approval_status === "approved" ? "Disable" : "Approve"}
                     </button>
                   </td>
                 </tr>

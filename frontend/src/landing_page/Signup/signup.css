@@ -1,14 +1,14 @@
 .login-card {
   width: 100%;
-  max-width: 420px;
-  border-radius: 14px;
+  max-width: 400px;
+  border-radius: 12px;
 }
 .form-control {
   height: 46px;
 }
 .register-card {
   width: 100%;
-  max-width: 600px;   /* wide & professional */
+  max-width: 600px;
   padding: 32px;
   border-radius: 14px;
 }

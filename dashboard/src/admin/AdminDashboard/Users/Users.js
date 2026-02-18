@@ -1,33 +1,28 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "../admin.css";
+import axios from "axios";
 function Users() {
-  const [users, setUsers] = useState([
-    {
-      id: 1,
-      name: "Aman Kumar",
-      email: "aman@gmail.com",
-      phone: "9876543210",
-      city: "Bengaluru",
-      status: "Active",
-    },
-    {
-      id: 2,
-      name: "Rahul Sharma",
-      email: "rahul@gmail.com",
-      phone: "9123456789",
-      city: "Mumbai",
-      status: "Blocked",
-    },
-    {
-      id: 3,
-      name: "Neha Singh",
-      email: "neha@gmail.com",
-      phone: "9988776655",
-      city: "Delhi",
-      status: "Active",
-    },
-  ]);
+  const [users, setUsers] = useState([]);
+  useEffect(()=>{
+    fetchUsers();
+  },[]);
+  const fetchUsers = async () => {
+    try {
+      const token = localStorage.getItem("token");
 
+      const res = await axios.get(
+        "http://localhost:5000/admin/fetchusers",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+      setUsers(res.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
   return (
     <div className="container-lg mt-4">
       {/* Header */}
@@ -66,9 +61,9 @@ function Users() {
             <thead className="table-light">
               <tr>
                 <th>Name</th>
-                <th>Email</th>
+                {/* <th>Email</th> */}
                 <th>Phone</th>
-                <th>City</th>
+                {/* <th>City</th> */}
                 <th>Status</th>
                 <th>Action</th>
               </tr>
@@ -78,16 +73,16 @@ function Users() {
               {users.map((user) => (
                 <tr key={user.id}>
                   <td>{user.name}</td>
-                  <td>{user.email}</td>
+                  {/* <td>{user.email}</td> */}
                   <td>{user.phone}</td>
-                  <td>{user.city}</td>
+                  {/* <td>{user.city}</td> */}
                   <td>
                     <span
                       className={`badge ${
-                        user.status === "Active" ? "bg-success" : "bg-danger"
+                        user.is_active === true ? "bg-success" : "bg-danger"
                       }`}
                     >
-                      {user.status}
+                      {user.is_active ? "Active" : "Inactive"}
                     </span>
                   </td>
                   <td>
@@ -96,12 +91,12 @@ function Users() {
                     </button>
                     <button
                       className={`btn btn-sm ${
-                        user.status === "Active"
+                        user.is_active === true
                           ? "btn-outline-danger"
                           : "btn-outline-success"
                       }`}
                     >
-                      {user.status === "Active" ? "Block" : "Unblock"}
+                      {user.is_active === true ? "Block" : "Unblock"}
                     </button>
                   </td>
                 </tr>
