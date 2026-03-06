@@ -1,15 +1,22 @@
 import React, { useEffect, useState } from "react";
 import "../admin.css";
 import axios from "axios";
+
 function Owners() {
-  const [owners,setowners] = useState([]);
-  useEffect(()=>{
+
+  const [owners, setOwners] = useState([]);
+  const [filteredOwners, setFilteredOwners] = useState([]);
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
     fetchOwners();
-  },[]);
-  const fetchOwners = async ()=>{
-    try{
+  }, []);
+
+  const fetchOwners = async () => {
+    try {
       const token = localStorage.getItem("token");
-      const owners = await axios.get(
+
+      const res = await axios.get(
         "http://localhost:5000/admin/fetchowners",
         {
           headers: {
@@ -17,30 +24,51 @@ function Owners() {
           }
         }
       );
-      setowners(owners.data);
-    }
-    catch (error) {
+
+      setOwners(res.data);
+      setFilteredOwners(res.data);
+
+    } catch (error) {
       console.error(error);
     }
-  }
-  const updateStatus = async (ownerId,ownerStatus)=>{
-    try{
+  };
+
+  // 🔍 Filter owners
+  const handleFilter = () => {
+
+    const filtered = owners.filter((owner) =>
+      owner.name.toLowerCase().includes(search.toLowerCase()) ||
+      owner.phone.includes(search)
+    );
+
+    setFilteredOwners(filtered);
+  };
+
+  const updateStatus = async (ownerId, ownerStatus) => {
+    try {
+
       const token = localStorage.getItem("token");
-      const newStatus = ownerStatus === 'approved' ? 'pending' : 'approved';
+
+      const newStatus =
+        ownerStatus === "approved" ? "pending" : "approved";
+
       await axios.put(
-        `http://localhost:5000/admin/owners/${ownerId}/updateStatus`,{status : newStatus},
+        `http://localhost:5000/admin/owners/${ownerId}/updateStatus`,
+        { status: newStatus },
         {
           headers: {
-            Authorization: `Bearer ${token}`,
-          },
+            Authorization: `Bearer ${token}`
+          }
         }
-      )
+      );
+
       fetchOwners();
-    }
-    catch(err){
+
+    } catch (err) {
       console.log(err);
     }
-  }
+  };
+
   return (
     <div className="container-lg mt-4">
 
@@ -64,11 +92,16 @@ function Owners() {
                     type="text"
                     className="form-control"
                     placeholder="Search by name or mobile number"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
                   />
                 </div>
 
                 <div className="col-md-4 d-grid">
-                  <button className="btn btn-outline-primary">
+                  <button
+                    className="btn btn-outline-primary"
+                    onClick={handleFilter}
+                  >
                     Filter
                   </button>
                 </div>
@@ -84,38 +117,25 @@ function Owners() {
         <div className="card-body table-responsive">
 
           <table className="table align-middle mb-0">
+
             <thead className="table-light">
               <tr>
                 <th>Name</th>
                 <th>Contact</th>
-                {/* <th>City</th> */}
-                <th>Courts</th>
-                {/* <th>Verified</th> */}
                 <th>Status</th>
                 <th>Action</th>
               </tr>
             </thead>
 
             <tbody>
-              {owners.map((owner) => (
+
+              {filteredOwners.map((owner) => (
                 <tr key={owner.id}>
+
                   <td>{owner.name}</td>
-                  <td>
-                    <div>{owner.phone}</div>
-                  </td>
-                  {/* <td>{owner.city}</td> */}
-                  <td className="fw-semibold">{owner.courts}</td>
-                  {/* <td>
-                    <span
-                      className={`badge ${
-                        owner.verified === "Yes"
-                          ? "bg-success"
-                          : "bg-warning text-dark"
-                      }`}
-                    >
-                      {owner.verified}
-                    </span>
-                  </td> */}
+
+                  <td>{owner.phone}</td>
+
                   <td>
                     <span
                       className={`badge ${
@@ -127,22 +147,35 @@ function Owners() {
                       {owner.approval_status}
                     </span>
                   </td>
+
                   <td>
-                    {/* <button className="btn btn-outline-primary btn-sm me-2">
-                      View
-                    </button> */}
-                    <button onClick={()=>updateStatus(owner.id,owner.approval_status)}
+                    <button
+                      onClick={() =>
+                        updateStatus(owner.id, owner.approval_status)
+                      }
                       className={`btn btn-sm ${
                         owner.approval_status === "approved"
                           ? "btn-outline-danger"
                           : "btn-outline-success"
                       }`}
                     >
-                      {owner.approval_status === "approved" ? "Disable" : "Approve"}
+                      {owner.approval_status === "approved"
+                        ? "Disable"
+                        : "Approve"}
                     </button>
                   </td>
+
                 </tr>
               ))}
+
+              {filteredOwners.length === 0 && (
+                <tr>
+                  <td colSpan="4" className="text-center text-muted">
+                    No owners found
+                  </td>
+                </tr>
+              )}
+
             </tbody>
 
           </table>
@@ -153,5 +186,4 @@ function Owners() {
     </div>
   );
 }
-
 export default Owners;

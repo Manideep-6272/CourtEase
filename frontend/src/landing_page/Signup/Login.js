@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./signup.css";
+import AdminDash from '../../dashboard/admin/AdminDash';
+import OwnerDash from '../../dashboard/courtowner/OwnerDash';
+import UserDash from '../../dashboard/user/UserDash';
 // import 
 function Login() {
   const navigate = useNavigate();
@@ -38,20 +41,21 @@ function Login() {
           role: formData.role
         }
       );
-
+       console.log("SUCCESS:", res);
+      console.log("LOGIN RESPONSE:", res.data);
       // Save token
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
       const userRole = res.data.user.role;
       // 🔥 Role Based Redirect
       if (userRole === "user") {
-        window.location.href = 'http://localhost:3000/users';
+        navigate('/user')
       }
       else if (userRole === "owner") {
-        window.location.href = 'http://localhost:3000/owners';
+        navigate('/owner')
       } 
       else if (userRole === "admin") {
-        window.location.href = 'http://localhost:3000/admin';
+        navigate('/admin')
       }
     } catch (err) {
       setError(err.response?.data?.message || "Login failed");
