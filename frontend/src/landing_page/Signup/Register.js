@@ -91,7 +91,7 @@ function Register() {
               <option value="">Select Role</option>
               <option value="user">User</option>
               <option value="owner">Owner</option>
-              <option value="admin">Admin</option>
+              {/* <option value="admin">Admin</option> */}
             </select>
           </div>
 
