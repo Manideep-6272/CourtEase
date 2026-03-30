@@ -64,7 +64,7 @@ function Navbar() {
             <li className="nav-item">
               <button
                 className="nav-link fw-semibold btn btn-link"
-                style={{ textDecoration: "none" }}
+                style={{ textDecoration: "none", color: "black" }}
                 onClick={handleLogout}
               >
                 Logout

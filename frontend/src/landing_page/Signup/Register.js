@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../api";
 import "./signup.css";
 
 function Register() {
@@ -15,6 +15,7 @@ function Register() {
   });
 
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   // Handle input change
   const handleChange = (e) => {
@@ -28,34 +29,51 @@ function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
 
-    // Basic validation
-    if (formData.password !== formData.confirmPassword) {
-      return setError("Passwords do not match");
+    // Validation
+    if (!formData.name || !formData.phone || !formData.password || !formData.role) {
+      setError("All fields are required");
+      setLoading(false);
+      return;
     }
 
-    if (!formData.role) {
-      return setError("Please select a role");
+    if (formData.phone.length < 10) {
+      setError("Phone number must be at least 10 digits");
+      setLoading(false);
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError("Password must be at least 6 characters");
+      setLoading(false);
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match");
+      setLoading(false);
+      return;
     }
 
     try {
-      const res = await axios.post(
-        "http://localhost:5000/register",
-        {
-          name: formData.name,
-          phone: formData.phone,
-          password: formData.password,
-          role: formData.role
-        }
-      );
+      const res = await api.post("/register", {
+        name: formData.name,
+        phone: formData.phone,
+        password: formData.password,
+        role: formData.role
+      });
 
+      setError("");
       alert(res.data.message);
 
       // Redirect to login after successful register
       navigate("/login");
 
     } catch (err) {
-      setError(err.response?.data?.message || "Registration failed");
+      setError(err.response?.data?.message || "Registration failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -165,8 +183,12 @@ function Register() {
             </label>
           </div>
 
-          <button className="btn btn-primary w-100 fw-semibold py-2">
-            Register
+          <button 
+            className="btn btn-primary w-100 fw-semibold py-2" 
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? 'Registering...' : 'Register'}
           </button>
 
         </form>

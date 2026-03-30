@@ -1,11 +1,8 @@
 import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../api";
 import "./signup.css";
-import AdminDash from '../../dashboard/admin/AdminDash';
-import OwnerDash from '../../dashboard/courtowner/OwnerDash';
-import UserDash from '../../dashboard/user/UserDash';
-// import 
+
 function Login() {
   const navigate = useNavigate();
 
@@ -16,6 +13,7 @@ function Login() {
   });
 
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
@@ -27,38 +25,77 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
+
+    // Validation
+    if (!formData.role || !formData.phone || !formData.password) {
+      setError("All fields are required");
+      setLoading(false);
+      return;
+    }
+
+    if (formData.phone.length < 10) {
+      setError("Phone number must be at least 10 digits");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const res = await api.post("/login", {
+        phone: formData.phone,
+        password: formData.password,
+        role: formData.role
+      });
+
+      // Save token and user
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
+
+      const userRole = res.data.user.role;
+
+      // Role-based redirect
+      if (userRole === "user") {
+        navigate('/user');
+      } else if (userRole === "owner") {
+        navigate('/owner');
+      } else if (userRole === "admin") {
+        navigate('/admin');
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || "Login failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
 
     if (!formData.role) {
       return setError("Please select a role");
     }
 
     try {
-      const res = await axios.post(
-        "http://localhost:5000/login",
-        {
-          phone: formData.phone,
-          password: formData.password,
-          role: formData.role
-        }
-      );
-       console.log("SUCCESS:", res);
-      console.log("LOGIN RESPONSE:", res.data);
-      // Save token
+      const res = await api.post("/login", {
+        phone: formData.phone,
+        password: formData.password,
+        role: formData.role
+      });
+
+      // Save token and user
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
+
       const userRole = res.data.user.role;
-      // 🔥 Role Based Redirect
+
+      // Role-based redirect
       if (userRole === "user") {
-        navigate('/user')
-      }
-      else if (userRole === "owner") {
-        navigate('/owner')
-      } 
-      else if (userRole === "admin") {
-        navigate('/admin')
+        navigate('/user');
+      } else if (userRole === "owner") {
+        navigate('/owner');
+      } else if (userRole === "admin") {
+        navigate('/admin');
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Login failed");
+      setError(err.response?.data?.message || "Login failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -87,6 +124,7 @@ function Login() {
               name="role"
               value={formData.role}
               onChange={handleChange}
+              required
             >
               <option value="">Select Role</option>
               <option value="user">User</option>
@@ -123,8 +161,12 @@ function Login() {
             />
           </div>
 
-          <button className="btn btn-primary w-100 fw-semibold py-2">
-            Login
+          <button 
+            className="btn btn-primary w-100 fw-semibold py-2" 
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
 

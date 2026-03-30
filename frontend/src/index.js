@@ -1,9 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
 
 import NavBar from './NavBar';
 import Footer from './Footer';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
 import About from './landing_page/AboutPage/About';
 import Home from './landing_page/HomePage/Home';
@@ -62,10 +63,36 @@ root.render(
         </LandingLayout>
       } />
 
-      {/* Dashboards (NO Navbar / Footer) */}
-      <Route path="/admin/*" element={<AdminDash />} />
-      <Route path="/owner/*" element={<OwnerDash />} />
-      <Route path="/user/*" element={<UserDash />} />
+      {/* Protected Dashboard Routes */}
+      <Route 
+        path="/admin/*" 
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <AdminDash />
+          </ProtectedRoute>
+        } 
+      />
+      
+      <Route 
+        path="/owner/*" 
+        element={
+          <ProtectedRoute requiredRole="owner">
+            <OwnerDash />
+          </ProtectedRoute>
+        } 
+      />
+      
+      <Route 
+        path="/user/*" 
+        element={
+          <ProtectedRoute requiredRole="user">
+            <UserDash />
+          </ProtectedRoute>
+        } 
+      />
+
+      {/* Catch all - redirect to home */}
+      <Route path="*" element={<Navigate to="/" replace />} />
 
     </Routes>
   </BrowserRouter>

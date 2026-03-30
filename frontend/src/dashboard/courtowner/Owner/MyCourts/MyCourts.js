@@ -263,6 +263,9 @@ function MyCourts() {
                 <option>Football</option>
                 <option>Tennis</option>
                 <option>Cricket</option>
+                <option>Basketball</option>
+                <option>Volleyball</option>
+                <option>Table Tennis</option>
               </select>
             </div>
 

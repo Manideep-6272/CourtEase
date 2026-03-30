@@ -3,7 +3,6 @@ import axios from "axios";
 import "../Home.css";
 
 function Bookings() {
-
   const [bookings, setBookings] = useState([]);
 
   useEffect(() => {
@@ -13,18 +12,13 @@ function Bookings() {
   // FETCH BOOKINGS FROM BACKEND
   const fetchBookings = async () => {
     try {
-
-      const res = await axios.get(
-        "http://localhost:5000/mybookings",
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`
-          }
-        }
-      );
+      const res = await axios.get("http://localhost:5000/owner/bookings", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
 
       setBookings(res.data);
-
     } catch (err) {
       console.error(err);
       alert("Failed to fetch bookings");
@@ -33,22 +27,16 @@ function Bookings() {
 
   // CANCEL BOOKING
   const cancelBooking = async (id) => {
-
     if (!window.confirm("Cancel this booking?")) return;
 
     try {
+      await axios.delete(`http://localhost:5000/owner/bookings/${id}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
 
-      await axios.delete(
-        `http://localhost:5000/bookings/${id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`
-          }
-        }
-      );
-
-      setBookings(bookings.filter(b => b.id !== id));
-
+      setBookings(bookings.filter((b) => b.id !== id));
     } catch (err) {
       console.error(err);
       alert("Cancel failed");
@@ -57,21 +45,16 @@ function Bookings() {
 
   return (
     <div className="container mt-4">
-
       {/* Header */}
       <div className="mb-4">
         <h2 className="fw-bold">Bookings</h2>
-        <p className="text-muted mb-0">
-          View and manage all court bookings
-        </p>
+        <p className="text-muted mb-0">View and manage all court bookings</p>
       </div>
 
       {/* Table */}
       <div className="card shadow-sm border-0">
         <div className="card-body table-responsive">
-
           <table className="table align-middle mb-0">
-
             <thead className="table-light">
               <tr>
                 <th>Court</th>
@@ -84,7 +67,6 @@ function Bookings() {
             </thead>
 
             <tbody>
-
               {bookings.length === 0 ? (
                 <tr>
                   <td colSpan="6" className="text-center text-muted">
@@ -92,15 +74,13 @@ function Bookings() {
                   </td>
                 </tr>
               ) : (
-
                 bookings.map((b) => (
-
                   <tr key={b.id}>
-                    <td>{b.court}</td>
-                    <td>{b.sport}</td>
-                    <td>{b.location}</td>
-                    <td>{b.booking_date}</td>
-                    <td>{b.slot_time}</td>
+                    <td>{b.court_name || "N/A"}</td>
+                    <td>{b.sport || "N/A"}</td>
+                    <td>{b.location || "N/A"}</td>
+                    <td>{new Date(b.booking_date).toLocaleDateString()}</td>
+                    <td>{b.slot_time || "N/A"}</td>
 
                     <td>
                       <button
@@ -110,20 +90,13 @@ function Bookings() {
                         Cancel
                       </button>
                     </td>
-
                   </tr>
-
                 ))
-
               )}
-
             </tbody>
-
           </table>
-
         </div>
       </div>
-
     </div>
   );
 }

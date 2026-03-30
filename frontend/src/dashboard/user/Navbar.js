@@ -1,20 +1,16 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
+
 function Navbar() {
   const navigate = useNavigate();
+
   const handleLogout = () => {
-    // ❌ remove token
     localStorage.removeItem("token");
-
-    // ❌ remove user (if you stored it)
     localStorage.removeItem("user");
-
-    // 🔥 update UI instantly (optional but useful)
     window.dispatchEvent(new Event("authChanged"));
-
-    // 👉 redirect to login page
     navigate("/login");
   };
+
   return (
     <nav
       className="navbar navbar-expand-lg border-bottom"
@@ -63,7 +59,7 @@ function Navbar() {
             <li className="nav-item">
               <button
                 className="nav-link fw-semibold btn btn-link"
-                style={{ textDecoration: "none" }}
+                style={{ textDecoration: "none", color: "black" }}
                 onClick={handleLogout}
               >
                 Logout
@@ -75,4 +71,5 @@ function Navbar() {
     </nav>
   );
 }
+
 export default Navbar;

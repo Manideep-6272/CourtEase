@@ -1,6 +1,16 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+
 function Navbar() {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    window.dispatchEvent(new Event("authChanged"));
+    navigate("/login");
+  };
+
   return (
     <nav
       className="navbar navbar-expand-lg border-bottom"
@@ -53,10 +63,20 @@ function Navbar() {
                 Profile
               </Link>
             </li>
+            <li className="nav-item">
+              <button
+                className="nav-link fw-semibold btn btn-link"
+                style={{ textDecoration: "none", color: "black" }}
+                onClick={handleLogout}
+              >
+                Logout
+              </button>
+            </li>
           </ul>
         </div>
       </div>
     </nav>
   );
 }
+
 export default Navbar;
