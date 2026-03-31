@@ -212,15 +212,17 @@ function Search() {
                 }}
               >
                 {/* Image */}
-                {/* <img
-                  src="https://images.unsplash.com/photo-1599058917765-a780eda07a3e"
-                  className="card-img-top"
-                  alt="court"
-                  style={{
-                    height: "200px",
-                    objectFit: "cover",
-                  }}
-                /> */}
+                {court.image_url && (
+                  <img
+                    src={court.image_url}
+                    className="card-img-top"
+                    alt={court.name}
+                    style={{
+                      height: "200px",
+                      objectFit: "cover",
+                    }}
+                  />
+                )}
 
                 {/* Body */}
                 <div className="card-body d-flex flex-column">
@@ -230,14 +232,22 @@ function Search() {
 
                   <p className="mb-2">📍 {court.location}</p>
 
-                  {/* Dummy Location URL */}
+                  {/* Owner Details */}
+                  <div className="p-2 bg-light rounded mb-2" style={{ border: "1px solid #ddd" }}>
+                    <p className="mb-1 small fw-bold text-dark">Owner: {court.owner_name}</p>
+                    <a href={`tel:${court.owner_phone}`} className="text-primary small text-decoration-none">
+                      📞 {court.owner_phone}
+                    </a>
+                  </div>
+
+                  {/* Google Maps Link */}
                   <a
-                    href="https://www.google.com/maps"
+                    href={`https://www.google.com/maps/search/${encodeURIComponent(court.location)}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-primary small mb-3"
+                    className="text-primary small mb-3 text-decoration-none"
                   >
-                    View Location on Map
+                    📍 View Location on Map
                   </a>
 
                   {/* Price */}
@@ -250,7 +260,7 @@ function Search() {
                     className="btn btn-primary mt-auto"
                     onClick={() => handleBookNow(court)}
                   >
-                    Book Now
+                    View Slots & Book
                   </button>
                 </div>
               </div>
@@ -268,6 +278,21 @@ function Search() {
         >
           <div className="modal-dialog modal-lg">
             <div className="modal-content p-4">
+              
+              {selectedCourt.image_url && (
+                <img
+                  src={selectedCourt.image_url}
+                  alt={selectedCourt.name}
+                  style={{
+                    height: "250px",
+                    objectFit: "cover",
+                    borderRadius: "8px",
+                    marginBottom: "20px",
+                    width: "100%"
+                  }}
+                />
+              )}
+
               {/* Header */}
               <div className="d-flex justify-content-between align-items-center">
                 <h4>Select Time Slots</h4>
@@ -288,7 +313,43 @@ function Search() {
               <h6 className="text-muted">
                 {selectedCourt.name} | {selectedCourt.sport}
               </h6>
+              <p className="text-muted">📍 {selectedCourt.location}, {selectedCourt.city}</p>
               <p className="text-muted">Date: {form.date}</p>
+
+              {/* Owner Details Box */}
+              <div className="card bg-light mb-4 border-warning">
+                <div className="card-body">
+                  <h6 className="fw-bold mb-3 text-warning">📞 Court Owner Details</h6>
+                  <div className="row">
+                    <div className="col-md-6">
+                      <p className="mb-2">
+                        <strong>Owner Name:</strong> 
+                        <br />
+                        <span className="text-dark">{selectedCourt.owner_name}</span>
+                      </p>
+                    </div>
+                    <div className="col-md-6">
+                      <p className="mb-0">
+                        <strong>Phone:</strong>
+                        <br />
+                        <a href={`tel:${selectedCourt.owner_phone}`} className="text-decoration-none text-primary fw-bold">
+                          {selectedCourt.owner_phone}
+                        </a>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Google Maps Link */}
+              <a
+                href={`https://www.google.com/maps/search/${encodeURIComponent(selectedCourt.location)}`}
+                target="_blank"
+                rel="noreferrer"
+                className="btn btn-sm btn-outline-info w-100 mb-3"
+              >
+                📍 View Location on Google Maps
+              </a>
 
               {/* Slots */}
               <div className="d-flex flex-wrap gap-2 mt-3">

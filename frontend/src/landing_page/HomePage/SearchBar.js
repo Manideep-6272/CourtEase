@@ -200,29 +200,64 @@ function SearchBar() {
           <div className="row">
             {courts.map((court) => (
               <div className="col-md-4 mb-4" key={court.id}>
-                <div className="card h-100 shadow-sm">
+                <div className="card h-100 shadow-sm border-0 hover-shadow" style={{ transition: "box-shadow 0.3s", overflow: "hidden" }}>
+                  
+                  {court.image_url && (
+                    <img 
+                      src={court.image_url} 
+                      alt={court.name}
+                      style={{ height: "200px", objectFit: "cover", width: "100%" }}
+                    />
+                  )}
+
                   <div className="card-body">
-                    <h5 className="card-title">{court.name}</h5>
-                    <p className="card-text text-muted">
+                    <h5 className="card-title text-primary">{court.name}</h5>
+                    <hr />
+                    
+                    {/* Court Details */}
+                    <p className="card-text text-muted mb-2">
                       <strong>Sport:</strong> {court.sport}
                     </p>
-                    <p className="card-text text-muted">
+                    <p className="card-text text-muted mb-2">
                       <strong>Location:</strong> {court.location}, {court.city}
+                      <a 
+                        href={`https://maps.google.com/?q=${encodeURIComponent(court.location + ', ' + court.city)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="ms-2 text-info"
+                        title="View on Google Maps"
+                      >
+                        📍
+                      </a>
                     </p>
-                    <p className="card-text">
+                    <p className="card-text mb-3">
                       <strong className="text-success">
                         ₹{court.price_per_hour}/hr
                       </strong>
                     </p>
-                    <p className="card-text small text-secondary">
-                      {court.description}
-                    </p>
+                    {court.description && (
+                      <p className="card-text small text-secondary mb-3">
+                        {court.description}
+                      </p>
+                    )}
+
+                    {/* Owner Details */}
+                    <div className="alert alert-light border border-secondary mb-3 py-2">
+                      <small className="d-block text-muted mb-2"><strong>Court Owner:</strong></small>
+                      <small className="d-block"><strong>Name:</strong> {court.owner_name}</small>
+                      <small className="d-block"><strong>Phone:</strong> 
+                        <a href={`tel:${court.owner_phone}`} className="ms-2 text-decoration-none">
+                          {court.owner_phone}
+                        </a>
+                      </small>
+                    </div>
+
                     <button 
                       className="btn btn-outline-primary btn-sm w-100"
                       onClick={() => handleViewCourt(court)}
                       disabled={!filters.date}
                     >
-                      {!filters.date ? "Select Date First" : "View Slots"}
+                      {!filters.date ? "Select Date First" : "View Slots & Book"}
                     </button>
                   </div>
                 </div>
@@ -237,6 +272,15 @@ function SearchBar() {
         <div className="modal d-block" style={{ background: "rgba(0,0,0,0.5)" }}>
           <div className="modal-dialog modal-lg">
             <div className="modal-content p-4">
+              
+              {selectedCourt.image_url && (
+                <img 
+                  src={selectedCourt.image_url} 
+                  alt={selectedCourt.name}
+                  style={{ height: "250px", objectFit: "cover", borderRadius: "8px", marginBottom: "20px", width: "100%" }}
+                />
+              )}
+
               <div className="d-flex justify-content-between align-items-center mb-4">
                 <div>
                   <h5 className="mb-1">{selectedCourt.name}</h5>
@@ -250,13 +294,65 @@ function SearchBar() {
                 ></button>
               </div>
 
-              {/* Date & Price Info */}
+              {/* Court & Owner Details Section */}
               <div className="alert alert-info mb-4">
+                <h6 className="fw-bold mb-3">Court Information</h6>
+                <div className="row">
+                  <div className="col-md-6">
+                    <p className="mb-2">
+                      <strong>Location:</strong> {selectedCourt.location}, {selectedCourt.city}
+                    </p>
+                    <p className="mb-2">
+                      <strong>Price:</strong> ₹{selectedCourt.price_per_hour}/hr per slot
+                    </p>
+                    {selectedCourt.description && (
+                      <p className="mb-0">
+                        <strong>Details:</strong> {selectedCourt.description}
+                      </p>
+                    )}
+                  </div>
+                  <div className="col-md-6">
+                    <a 
+                      href={`https://maps.google.com/?q=${encodeURIComponent(selectedCourt.location + ', ' + selectedCourt.city)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-sm btn-outline-info w-100"
+                    >
+                      📍 View on Google Maps
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Owner Details Section */}
+              <div className="card bg-light mb-4 border-warning">
+                <div className="card-body">
+                  <h6 className="fw-bold mb-3 text-warning">📞 Court Owner Details</h6>
+                  <div className="row">
+                    <div className="col-md-6">
+                      <p className="mb-2">
+                        <strong>Owner Name:</strong> 
+                        <br />
+                        <span className="text-dark">{selectedCourt.owner_name}</span>
+                      </p>
+                    </div>
+                    <div className="col-md-6">
+                      <p className="mb-0">
+                        <strong>Phone:</strong>
+                        <br />
+                        <a href={`tel:${selectedCourt.owner_phone}`} className="text-decoration-none text-primary fw-bold">
+                          {selectedCourt.owner_phone}
+                        </a>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Date Info */}
+              <div className="alert alert-secondary mb-4">
                 <p className="mb-1">
-                  <strong>Date:</strong> {filters.date}
-                </p>
-                <p className="mb-0">
-                  <strong>Price:</strong> ₹{selectedCourt.price_per_hour}/hr per slot
+                  <strong>Booking Date:</strong> {filters.date}
                 </p>
               </div>
 

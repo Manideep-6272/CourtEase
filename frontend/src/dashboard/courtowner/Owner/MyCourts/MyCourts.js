@@ -12,7 +12,9 @@ function MyCourts() {
     sport: "",
     location: "",
     city: "",
-    price_per_hour: ""
+    price_per_hour: "",
+    image: null,
+    imagePreview: null
   });
 
   useEffect(() => {
@@ -45,7 +47,9 @@ function MyCourts() {
       sport: "",
       location: "",
       city: "",
-      price_per_hour: ""
+      price_per_hour: "",
+      image: null,
+      imagePreview: null
     });
 
     setShowModal(true);
@@ -61,7 +65,10 @@ function MyCourts() {
       sport: court.sport,
       location: court.location,
       city: court.city,
-      price_per_hour: court.price_per_hour
+      price_per_hour: court.price_per_hour,
+      image: null,
+      imagePreview: court.image_url || null,
+      existing_image_url: court.image_url || null
     });
 
     setShowModal(true);
@@ -77,19 +84,50 @@ function MyCourts() {
 
   };
 
+  // HANDLE IMAGE CHANGE
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData({
+          ...formData,
+          image: file,
+          imagePreview: reader.result
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   // ADD OR UPDATE COURT
   const saveCourt = async () => {
 
     try {
 
+      const uploadData = new FormData();
+      uploadData.append("name", formData.name);
+      uploadData.append("sport", formData.sport);
+      uploadData.append("location", formData.location);
+      uploadData.append("city", formData.city);
+      uploadData.append("price_per_hour", formData.price_per_hour);
+      
+      if (formData.image) {
+        uploadData.append("image", formData.image);
+      }
+
       if (editingCourt) {
+        if (formData.existing_image_url) {
+          uploadData.append("existing_image_url", formData.existing_image_url);
+        }
 
         const res = await axios.put(
           `http://localhost:5000/courts/${editingCourt.id}`,
-          formData,
+          uploadData,
           {
             headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+              "Content-Type": "multipart/form-data"
             }
           }
         );
@@ -104,10 +142,11 @@ function MyCourts() {
 
         const res = await axios.post(
           "http://localhost:5000/courts",
-          formData,
+          uploadData,
           {
             headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+              "Content-Type": "multipart/form-data"
             }
           }
         );
@@ -174,6 +213,14 @@ function MyCourts() {
             <div className="col-md-4" key={court.id}>
               <div className="card shadow-sm border-0 h-100">
 
+                {court.image_url && (
+                  <img 
+                    src={court.image_url} 
+                    alt={court.name}
+                    style={{ height: "200px", objectFit: "cover", borderRadius: "8px 8px 0 0" }}
+                  />
+                )}
+
                 <div className="card-body">
 
                   <h5 className="fw-semibold">
@@ -229,12 +276,37 @@ function MyCourts() {
 
           <div className="modal-card">
 
-            <h5 className="fw-bold mb-3">
+            <h5 className="fw-bold mb-2" style={{ fontSize: "16px" }}>
               {editingCourt ? "Edit Court" : "Add Court"}
             </h5>
 
-            <div className="mb-3">
-              <label className="form-label fw-semibold">
+            <div className="mb-2">
+              <label className="form-label fw-semibold" style={{ fontSize: "13px", marginBottom: "6px" }}>
+                Court Image
+              </label>
+
+              {formData.imagePreview && (
+                <div className="mb-2">
+                  <img 
+                    src={formData.imagePreview} 
+                    alt="Preview"
+                    style={{ width: "100%", maxHeight: "120px", objectFit: "cover", borderRadius: "6px" }}
+                  />
+                </div>
+              )}
+
+              <input
+                type="file"
+                accept="image/*"
+                className="form-control"
+                style={{ fontSize: "12px", padding: "6px 8px" }}
+                onChange={handleImageChange}
+              />
+              <small className="text-muted" style={{ fontSize: "11px" }}>Max: 5MB. JPEG, PNG, GIF</small>
+            </div>
+
+            <div className="mb-2">
+              <label className="form-label fw-semibold" style={{ fontSize: "13px", marginBottom: "4px" }}>
                 Court Name
               </label>
 
@@ -242,19 +314,21 @@ function MyCourts() {
                 type="text"
                 name="name"
                 className="form-control"
+                style={{ fontSize: "13px", padding: "6px 8px" }}
                 value={formData.name}
                 onChange={handleChange}
               />
             </div>
 
-            <div className="mb-3">
-              <label className="form-label fw-semibold">
+            <div className="mb-2">
+              <label className="form-label fw-semibold" style={{ fontSize: "13px", marginBottom: "4px" }}>
                 Sport
               </label>
 
               <select
                 name="sport"
                 className="form-select"
+                style={{ fontSize: "13px", padding: "6px 8px" }}
                 value={formData.sport}
                 onChange={handleChange}
               >
@@ -269,8 +343,8 @@ function MyCourts() {
               </select>
             </div>
 
-            <div className="mb-3">
-              <label className="form-label fw-semibold">
+            <div className="mb-2">
+              <label className="form-label fw-semibold" style={{ fontSize: "13px", marginBottom: "4px" }}>
                 Location
               </label>
 
@@ -278,13 +352,14 @@ function MyCourts() {
                 type="text"
                 name="location"
                 className="form-control"
+                style={{ fontSize: "13px", padding: "6px 8px" }}
                 value={formData.location}
                 onChange={handleChange}
               />
             </div>
 
-            <div className="mb-3">
-              <label className="form-label fw-semibold">
+            <div className="mb-2">
+              <label className="form-label fw-semibold" style={{ fontSize: "13px", marginBottom: "4px" }}>
                 City
               </label>
 
@@ -292,13 +367,14 @@ function MyCourts() {
                 type="text"
                 name="city"
                 className="form-control"
+                style={{ fontSize: "13px", padding: "6px 8px" }}
                 value={formData.city}
                 onChange={handleChange}
               />
             </div>
 
-            <div className="mb-3">
-              <label className="form-label fw-semibold">
+            <div className="mb-2">
+              <label className="form-label fw-semibold" style={{ fontSize: "13px", marginBottom: "4px" }}>
                 Price per Hour (₹)
               </label>
 
@@ -306,22 +382,25 @@ function MyCourts() {
                 type="number"
                 name="price_per_hour"
                 className="form-control"
+                style={{ fontSize: "13px", padding: "6px 8px" }}
                 value={formData.price_per_hour}
                 onChange={handleChange}
               />
             </div>
 
-            <div className="d-flex justify-content-end gap-2">
+            <div className="d-flex justify-content-end gap-2" style={{ marginTop: "16px" }}>
 
               <button
-                className="btn btn-secondary"
+                className="btn btn-secondary btn-sm"
+                style={{ fontSize: "13px", padding: "5px 12px" }}
                 onClick={() => setShowModal(false)}
               >
                 Cancel
               </button>
 
               <button
-                className="btn btn-primary"
+                className="btn btn-primary btn-sm"
+                style={{ fontSize: "13px", padding: "5px 12px" }}
                 onClick={saveCourt}
               >
                 {editingCourt ? "Update" : "Save"}

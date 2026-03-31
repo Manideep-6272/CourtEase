@@ -4,10 +4,50 @@ const cors = require("cors");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const pool = require("./db");
+const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// ================= MULTER SETUP =================
+const uploadsDir = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadsDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, "court-" + uniqueSuffix + path.extname(file.originalname));
+  },
+});
+
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png|gif/;
+    const extname = allowedTypes.test(
+      path.extname(file.originalname).toLowerCase()
+    );
+    const mimetype = allowedTypes.test(file.mimetype);
+
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb(new Error("Only images are allowed"));
+    }
+  },
+});
+
+// Serve static files from uploads folder
+app.use("/uploads", express.static(uploadsDir));
 
 const PORT = process.env.PORT || 5000;
 
@@ -91,8 +131,8 @@ app.post("/login", async (req, res) => {
 
     console.log(`[LOGIN] Comparing password...`);
     const isMatch = await bcrypt.compare(password, user.password);
-    console.log(`[LOGIN] Password match result: ${isMatch}`);
-    console.log(`[LOGIN] Stored hash: ${user.password}`);
+    // console.log(`[LOGIN] Password match result: ${isMatch}`);
+    // console.log(`[LOGIN] Stored hash: ${user.password}`);
 
     if (!isMatch) {
       console.log(`[LOGIN] Password mismatch for user: ${phone}`);
@@ -118,16 +158,21 @@ app.post("/login", async (req, res) => {
 
 // ================= COURTS =================
 
-app.post("/courts", authMiddleware, async (req, res) => {
+app.post("/courts", authMiddleware, upload.single("image"), async (req, res) => {
   try {
     const ownerId = req.user.id;
     const { name, sport, location, city, price_per_hour } = req.body;
 
+    // Get image URL if uploaded
+    const imageUrl = req.file
+      ? `http://localhost:5000/uploads/${req.file.filename}`
+      : null;
+
     const newCourt = await pool.query(
-      `INSERT INTO courts (owner_id, name, sport, location, city, price_per_hour)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO courts (owner_id, name, sport, location, city, price_per_hour, image_url)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *`,
-      [ownerId, name, sport, location, city, price_per_hour],
+      [ownerId, name, sport, location, city, price_per_hour, imageUrl],
     );
 
     const courtId = newCourt.rows[0].id;
@@ -166,17 +211,104 @@ app.get("/mycourts", authMiddleware, async (req, res) => {
   res.json(courts.rows);
 });
 app.get("/getcourts", async (req, res) => {
-  const courts = await pool.query("SELECT * FROM courts");
-  res.json(courts.rows);
+  try {
+    const courts = await pool.query(`
+      SELECT 
+        c.id,
+        c.owner_id,
+        c.name,
+        c.sport,
+        c.location,
+        c.city,
+        c.price_per_hour,
+        c.description,
+        c.amenities,
+        c.capacity,
+        c.image_url,
+        c.is_active,
+        c.created_at,
+        c.updated_at,
+        u.name as owner_name,
+        u.phone as owner_phone,
+        u.email as owner_email
+      FROM courts c
+      JOIN users u ON c.owner_id = u.id
+      WHERE c.is_active = true
+      ORDER BY c.created_at DESC
+    `);
+    res.json(courts.rows);
+  } catch (err) {
+    console.error("Error fetching courts:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// ================= GET COURTS BY CITY AND SPORT =================
+app.get("/getcourtsbylocation", async (req, res) => {
+  try {
+    const { city, sport } = req.query;
+
+    let query = `
+      SELECT 
+        c.id,
+        c.owner_id,
+        c.name,
+        c.sport,
+        c.location,
+        c.city,
+        c.price_per_hour,
+        c.description,
+        c.amenities,
+        c.capacity,
+        c.image_url,
+        c.is_active,
+        c.created_at,
+        c.updated_at,
+        u.name as owner_name,
+        u.phone as owner_phone,
+        u.email as owner_email
+      FROM courts c
+      JOIN users u ON c.owner_id = u.id
+      WHERE c.is_active = true
+    `;
+
+    const params = [];
+
+    // Filter by city
+    if (city) {
+      query += ` AND LOWER(c.city) = LOWER($${params.length + 1})`;
+      params.push(city);
+    }
+
+    // Filter by sport
+    if (sport) {
+      query += ` AND LOWER(c.sport) = LOWER($${params.length + 1})`;
+      params.push(sport);
+    }
+
+    query += ` ORDER BY c.created_at DESC`;
+
+    const courts = await pool.query(query, params);
+    res.json(courts.rows);
+  } catch (err) {
+    console.error("Error fetching courts by location:", err);
+    res.status(500).json({ message: "Server error" });
+  }
 });
 // ================= EDIT COURT =================
 
-app.put("/courts/:id", authMiddleware, async (req, res) => {
+app.put("/courts/:id", authMiddleware, upload.single("image"), async (req, res) => {
   try {
     const ownerId = req.user.id;
     const courtId = req.params.id;
 
     const { name, sport, location, city, price_per_hour } = req.body;
+
+    // Get image URL if uploaded, otherwise keep existing
+    let imageUrl = req.body.existing_image_url || null;
+    if (req.file) {
+      imageUrl = `http://localhost:5000/uploads/${req.file.filename}`;
+    }
 
     const updatedCourt = await pool.query(
       `
@@ -185,11 +317,12 @@ app.put("/courts/:id", authMiddleware, async (req, res) => {
           sport=$2,
           location=$3,
           city=$4,
-          price_per_hour=$5
-      WHERE id=$6 AND owner_id=$7
+          price_per_hour=$5,
+          image_url=$6
+      WHERE id=$7 AND owner_id=$8
       RETURNING *
       `,
-      [name, sport, location, city, price_per_hour, courtId, ownerId],
+      [name, sport, location, city, price_per_hour, imageUrl, courtId, ownerId],
     );
 
     if (updatedCourt.rows.length === 0) {
