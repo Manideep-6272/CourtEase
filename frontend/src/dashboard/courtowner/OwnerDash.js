@@ -13,7 +13,6 @@ function OwnerDash() {
       <div style={{ marginTop: "80px" }}>
         <Routes>
           <Route path="/" element={<Homepage />} />
-          {/* <Route path="/owners" element={<Homepage />} /> */}
           <Route path="mycourts" element={<MyCourts />} />
           <Route path="bookings" element={<Bookings />} />
           <Route path="earnings" element={<Earnings />} />

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import axios from "axios";
-import RazorpayGateway from "./RazorpayGateway";
+import PaymentGateway from "./PaymentGateway";
 
 function Search() {
   const [form, setForm] = useState({
@@ -10,7 +10,6 @@ function Search() {
   });
 
   const [results, setResults] = useState([]);
-
   const [selectedCourt, setSelectedCourt] = useState(null);
   const [slots, setSlots] = useState([]);
   const [selectedSlots, setSelectedSlots] = useState([]);
@@ -19,12 +18,12 @@ function Search() {
   const [showPayment, setShowPayment] = useState(false);
   const [paymentData, setPaymentData] = useState(null);
 
-  // ✅ Time formatter
+  // Format time range
   const timeRangeFormatter = (slotsToUse = null) => {
-    const slots = slotsToUse || selectedSlots;
-    if (slots.length === 0) return "";
+    const s = slotsToUse || selectedSlots;
+    if (s.length === 0) return "";
 
-    const sorted = [...slots].map((s) => s.slot_time).sort();
+    const sorted = [...s].map((x) => x.slot_time).sort();
 
     const start = new Date(`1970-01-01T${sorted[0]}`);
     const end = new Date(`1970-01-01T${sorted[sorted.length - 1]}`);
@@ -39,47 +38,6 @@ function Search() {
     })}`;
   };
 
-  useEffect(() => {
-    const pendingBooking = localStorage.getItem("pendingBooking");
-    if (pendingBooking) {
-      const booking = JSON.parse(pendingBooking);
-
-      setForm({
-        location: booking.location || "",
-        sport: booking.sport || "",
-        date: booking.date || "",
-      });
-
-      setSelectedCourt({
-        id: booking.courtId,
-        name: booking.courtName,
-        sport: booking.sport,
-        location: booking.location,
-        price_per_hour: booking.pricePerHour,
-      });
-
-      setSelectedSlots(booking.slots || []);
-
-      const timeRange = timeRangeFormatter(booking.slots || []);
-
-      setPaymentData({
-        courtId: booking.courtId,
-        courtName: booking.courtName,
-        sport: booking.sport,
-        date: booking.date,
-        timeRange: timeRange,
-        duration: (booking.slots || []).length,
-        pricePerHour: booking.pricePerHour,
-        totalAmount:
-          (booking.slots || []).length * booking.pricePerHour,
-        slotIds: booking.slotIds,
-      });
-
-      setShowPayment(true);
-      localStorage.removeItem("pendingBooking");
-    }
-  }, []);
-
   const handleChange = (e) => {
     setForm({
       ...form,
@@ -87,43 +45,58 @@ function Search() {
     });
   };
 
+  // Search courts
   const handleSearch = async () => {
-    const res = await axios.get("http://localhost:5000/getcourts");
+    try {
+      const res = await axios.get("http://localhost:5000/getcourts");
 
-    const filtered = res.data.filter(
-      (court) =>
-        (form.location === "" ||
-          court.location
-            .toLowerCase()
-            .includes(form.location.toLowerCase())) &&
-        (form.sport === "" ||
-          court.sport.toLowerCase() === form.sport.toLowerCase())
-    );
+      const filtered = res.data.filter(
+        (court) =>
+          (form.location === "" ||
+            court.location
+              .toLowerCase()
+              .includes(form.location.toLowerCase())) &&
+          (form.sport === "" ||
+            court.sport.toLowerCase() === form.sport.toLowerCase()),
+      );
 
-    setResults(filtered);
+      setResults(filtered);
+    } catch (error) {
+      console.log(error);
+      alert("Error fetching courts");
+    }
   };
 
+  // Book now
   const handleBookNow = async (court) => {
     if (!form.date) {
       alert("Please select a date first");
       return;
     }
 
-    const res = await axios.get(
-      `http://localhost:5000/courts/${court.id}/slots?date=${form.date}`
-    );
+    try {
+      const res = await axios.get(
+        `http://localhost:5000/courts/${court.id}/slots?date=${form.date}`,
+      );
 
-    setSelectedCourt(court);
-    setSlots(res.data || []);
-    setSelectedSlots([]);
-    setShowModal(true);
+      setSelectedCourt(court);
+      setSlots(res.data);
+      setSelectedSlots([]);
+      setShowModal(true);
+    } catch (error) {
+      console.log(error);
+      alert("Error loading slots");
+    }
   };
 
+  // Toggle slot
   const toggleSlot = (slot) => {
     if (slot.is_booked) return;
 
     setSelectedSlots((prev) => {
-      if (prev.find((s) => s.id === slot.id)) {
+      const exists = prev.find((s) => s.id === slot.id);
+
+      if (exists) {
         return prev.filter((s) => s.id !== slot.id);
       } else {
         return [...prev, slot];
@@ -131,9 +104,10 @@ function Search() {
     });
   };
 
+  // Show payment
   const handleShowPayment = () => {
     if (selectedSlots.length === 0) {
-      alert("Select slots");
+      alert("Please select slots");
       return;
     }
 
@@ -147,23 +121,27 @@ function Search() {
       timeRange: timeRange,
       duration: selectedSlots.length,
       pricePerHour: selectedCourt.price_per_hour,
-      totalAmount:
-        selectedSlots.length * selectedCourt.price_per_hour,
+      totalAmount: selectedSlots.length * selectedCourt.price_per_hour,
       slotIds: selectedSlots.map((s) => s.id),
     });
 
+    setShowModal(false);
     setShowPayment(true);
   };
 
-  const handlePaymentSuccess = () => {
-    alert("✅ Payment successful!");
+  // Payment success
+  const handlePaymentSuccess = async () => {
+    alert("✅ Payment Successful & Court Booked");
+
     setShowPayment(false);
-    setShowModal(false);
-    setSelectedSlots([]);
     setPaymentData(null);
-    handleSearch();
+    setSelectedSlots([]);
+    setSelectedCourt(null);
+
+    await handleSearch();
   };
 
+  // Payment cancel
   const handlePaymentCancel = () => {
     setShowPayment(false);
     setPaymentData(null);
@@ -171,30 +149,214 @@ function Search() {
 
   return (
     <>
-      <div className="container mt-5 d-flex justify-content-center">
-        <div className="card shadow-lg p-4">
-          <input name="location" placeholder="Location" onChange={handleChange} />
-          <select name="sport" onChange={handleChange}>
-            <option value="">Sport</option>
-            <option>Badminton</option>
-            <option>Tennis</option>
-          </select>
-          <input type="date" name="date" onChange={handleChange} />
-          <button onClick={handleSearch}>Search</button>
+      {/* Search */}
+      <div className="container mt-4">
+        <div className="card p-3 shadow-sm">
+          <div className="row">
+            <div className="col-md-3">
+              <input
+                type="text"
+                name="location"
+                className="form-control"
+                placeholder="Location"
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="col-md-3">
+              <select
+                name="sport"
+                className="form-select"
+                onChange={handleChange}
+              >
+                <option value="">Sport</option>
+                <option>Badminton</option>
+                <option>Football</option>
+                <option>Tennis</option>
+                <option>Cricket</option>
+                <option>Basketball</option>
+                <option>Volleyball</option>
+                <option>Table Tennis</option>
+              </select>
+            </div>
+
+            <div className="col-md-3">
+              <input
+                type="date"
+                name="date"
+                className="form-control"
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="col-md-3">
+              <button className="btn btn-primary w-100" onClick={handleSearch}>
+                Search
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
-      {results.map((court) => (
-        <div key={court.id}>
-          {court.name}
-          <button onClick={() => handleBookNow(court)}>
-            Book
-          </button>
-        </div>
-      ))}
+      {/* Courts */}
+      <div className="container mt-5">
+        <div className="row">
+          {results.map((court) => (
+            <div className="col-md-4 mb-4" key={court.id}>
+              <div
+                className="card shadow-lg border-0 h-100"
+                style={{
+                  borderRadius: "15px",
+                  overflow: "hidden",
+                  transition: "0.3s",
+                }}
+              >
+                {/* Image */}
+                {/* <img
+                  src="https://images.unsplash.com/photo-1599058917765-a780eda07a3e"
+                  className="card-img-top"
+                  alt="court"
+                  style={{
+                    height: "200px",
+                    objectFit: "cover",
+                  }}
+                /> */}
 
+                {/* Body */}
+                <div className="card-body d-flex flex-column">
+                  <h5 className="card-title fw-bold">{court.name}</h5>
+
+                  <p className="text-muted mb-2">🏸 {court.sport}</p>
+
+                  <p className="mb-2">📍 {court.location}</p>
+
+                  {/* Dummy Location URL */}
+                  <a
+                    href="https://www.google.com/maps"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-primary small mb-3"
+                  >
+                    View Location on Map
+                  </a>
+
+                  {/* Price */}
+                  <h6 className="text-success fw-bold mb-3">
+                    ₹{court.price_per_hour}/hour
+                  </h6>
+
+                  {/* Book Button */}
+                  <button
+                    className="btn btn-primary mt-auto"
+                    onClick={() => handleBookNow(court)}
+                  >
+                    Book Now
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Slot Modal */}
+      {/* Slot Modal */}
+      {showModal && selectedCourt && (
+        <div
+          className="modal d-block"
+          style={{ background: "rgba(0,0,0,0.5)" }}
+        >
+          <div className="modal-dialog modal-lg">
+            <div className="modal-content p-4">
+              {/* Header */}
+              <div className="d-flex justify-content-between align-items-center">
+                <h4>Select Time Slots</h4>
+
+                <button
+                  className="btn-close"
+                  onClick={() => {
+                    setShowModal(false);
+                    setSelectedSlots([]);
+                    setSelectedCourt(null);
+                  }}
+                ></button>
+              </div>
+
+              <hr />
+
+              {/* Court Info */}
+              <h6 className="text-muted">
+                {selectedCourt.name} | {selectedCourt.sport}
+              </h6>
+              <p className="text-muted">Date: {form.date}</p>
+
+              {/* Slots */}
+              <div className="d-flex flex-wrap gap-2 mt-3">
+                {slots.map((slot) => {
+                  const isSelected = selectedSlots.find(
+                    (s) => s.id === slot.id,
+                  );
+
+                  return (
+                    <button
+                      key={slot.id}
+                      className={`btn ${
+                        slot.is_booked
+                          ? "btn-danger"
+                          : isSelected
+                            ? "btn-success"
+                            : "btn-outline-secondary"
+                      }`}
+                      onClick={() => toggleSlot(slot)}
+                      disabled={slot.is_booked}
+                    >
+                      {new Date(
+                        `1970-01-01T${slot.slot_time}`,
+                      ).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Footer */}
+              <div className="mt-4 d-flex justify-content-between align-items-center">
+                <h5 className="text-success">
+                  Total: ₹{selectedSlots.length * selectedCourt.price_per_hour}
+                </h5>
+
+                <div className="d-flex gap-2">
+                  {/* Cancel Button */}
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => {
+                      setShowModal(false);
+                      setSelectedSlots([]);
+                      setSelectedCourt(null);
+                    }}
+                  >
+                    Cancel
+                  </button>
+
+                  {/* Proceed Button */}
+                  <button
+                    className="btn btn-success"
+                    onClick={handleShowPayment}
+                  >
+                    Proceed to Payment
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Payment */}
       {showPayment && paymentData && (
-        <RazorpayGateway
+        <PaymentGateway
           bookingData={paymentData}
           onPaymentSuccess={handlePaymentSuccess}
           onPaymentCancel={handlePaymentCancel}

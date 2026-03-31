@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+
 function PaymentGateway({ bookingData, onPaymentSuccess, onPaymentCancel }) {
   const [cardNumber, setCardNumber] = useState("");
   const [expiryDate, setExpiryDate] = useState("");
@@ -8,17 +9,14 @@ function PaymentGateway({ bookingData, onPaymentSuccess, onPaymentCancel }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentError, setPaymentError] = useState("");
 
-  // Validate card number (simple validation)
   const isValidCardNumber = (number) => {
     return number.replace(/\s/g, "").length === 16;
   };
 
-  // Validate expiry date (MM/YY format)
   const isValidExpiryDate = (date) => {
     return /^\d{2}\/\d{2}$/.test(date);
   };
 
-  // Validate CVV
   const isValidCVV = (cvv) => {
     return cvv.length === 3;
   };
@@ -26,7 +24,6 @@ function PaymentGateway({ bookingData, onPaymentSuccess, onPaymentCancel }) {
   const handleCardNumberChange = (e) => {
     let value = e.target.value.replace(/\s/g, "");
     if (value.length <= 16) {
-      // Add spaces every 4 digits
       value = value.replace(/(\d{4})/g, "$1 ").trim();
       setCardNumber(value);
       setPaymentError("");
@@ -50,34 +47,33 @@ function PaymentGateway({ bookingData, onPaymentSuccess, onPaymentCancel }) {
     setPaymentError("");
   };
 
+  // 🔥 UPDATED FUNCTION
   const handlePaymentSubmit = async (e) => {
     e.preventDefault();
     setPaymentError("");
 
-    // Validation
     if (!cardHolder.trim()) {
       setPaymentError("Cardholder name is required");
       return;
     }
 
     if (!isValidCardNumber(cardNumber)) {
-      setPaymentError("Invalid card number (16 digits required)");
+      setPaymentError("Invalid card number");
       return;
     }
 
     if (!isValidExpiryDate(expiryDate)) {
-      setPaymentError("Invalid expiry date (MM/YY format required)");
+      setPaymentError("Invalid expiry date");
       return;
     }
 
     if (!isValidCVV(cvv)) {
-      setPaymentError("Invalid CVV (3 digits required)");
+      setPaymentError("Invalid CVV");
       return;
     }
 
     setIsProcessing(true);
 
-    // Simulate payment processing delay
     try {
       // 🔥 CALL BOOKINGS API
       const token = localStorage.getItem("token");
@@ -121,7 +117,6 @@ function PaymentGateway({ bookingData, onPaymentSuccess, onPaymentCancel }) {
     >
       <div className="modal-dialog modal-lg">
         <div className="modal-content p-4">
-          {/* Header */}
           <div className="d-flex justify-content-between align-items-center mb-4">
             <h5 className="modal-title">Payment Details</h5>
             <button
@@ -133,7 +128,6 @@ function PaymentGateway({ bookingData, onPaymentSuccess, onPaymentCancel }) {
           </div>
 
           <div className="row">
-            {/* Booking Summary - Left Side */}
             <div className="col-md-5">
               <div className="card bg-light p-3">
                 <h6 className="fw-bold mb-3">Order Summary</h6>
@@ -179,122 +173,90 @@ function PaymentGateway({ bookingData, onPaymentSuccess, onPaymentCancel }) {
               </div>
             </div>
 
-            {/* Payment Form - Right Side */}
             <div className="col-md-7">
               <form onSubmit={handlePaymentSubmit}>
-                {/* Error Message */}
                 {paymentError && (
-                  <div className="alert alert-danger alert-dismissible fade show" role="alert">
+                  <div className="alert alert-danger">
                     {paymentError}
                   </div>
                 )}
 
-                {/* Cardholder Name */}
                 <div className="mb-3">
-                  <label htmlFor="cardHolder" className="form-label">
+                  <label className="form-label">
                     Cardholder Name
                   </label>
                   <input
                     type="text"
                     className="form-control"
-                    id="cardHolder"
-                    placeholder="John Doe"
                     value={cardHolder}
-                    onChange={(e) => setCardHolder(e.target.value)}
+                    onChange={(e) =>
+                      setCardHolder(e.target.value)
+                    }
                     disabled={isProcessing}
                   />
                 </div>
 
-                {/* Card Number */}
                 <div className="mb-3">
-                  <label htmlFor="cardNumber" className="form-label">
+                  <label className="form-label">
                     Card Number
                   </label>
                   <input
                     type="text"
                     className="form-control"
-                    id="cardNumber"
-                    placeholder="1234 5678 9012 3456"
                     value={cardNumber}
                     onChange={handleCardNumberChange}
-                    maxLength="19"
                     disabled={isProcessing}
                   />
-                  <small className="text-muted">16 digits</small>
                 </div>
 
-                {/* Expiry Date and CVV */}
                 <div className="row mb-3">
                   <div className="col-md-6">
-                    <label htmlFor="expiryDate" className="form-label">
-                      Expiry Date
+                    <label className="form-label">
+                      Expiry
                     </label>
                     <input
                       type="text"
                       className="form-control"
-                      id="expiryDate"
-                      placeholder="MM/YY"
                       value={expiryDate}
                       onChange={handleExpiryChange}
-                      maxLength="5"
                       disabled={isProcessing}
                     />
                   </div>
+
                   <div className="col-md-6">
-                    <label htmlFor="cvv" className="form-label">
+                    <label className="form-label">
                       CVV
                     </label>
                     <input
                       type="text"
                       className="form-control"
-                      id="cvv"
-                      placeholder="123"
                       value={cvv}
                       onChange={handleCVVChange}
-                      maxLength="3"
                       disabled={isProcessing}
                     />
                   </div>
                 </div>
 
-                {/* Info Box */}
-                <div className="alert alert-info mb-3" role="alert">
-                  <small>
-                    💡 <strong>Demo Mode:</strong> This is a dummy payment
-                    gateway for testing. Use any valid 16-digit number.
-                  </small>
-                </div>
-
-                {/* Buttons */}
-                <div className="d-grid gap-2">
+                <div className="d-grid">
                   <button
                     type="submit"
                     className="btn btn-success"
                     disabled={isProcessing}
                   >
-                    {isProcessing ? (
-                      <>
-                        <span
-                          className="spinner-border spinner-border-sm me-2"
-                          role="status"
-                          aria-hidden="true"
-                        ></span>
-                        Processing Payment...
-                      </>
-                    ) : (
-                      `Pay ₹${bookingData.totalAmount}`
-                    )}
-                  </button>
-
-                  <button
-                    type="button"
-                    className="btn btn-outline-secondary"
-                    onClick={onPaymentCancel}
-                    disabled={isProcessing}
-                  >
-                    Cancel
+                    {isProcessing
+                      ? "Processing..."
+                      : `Pay ₹${bookingData.totalAmount}`}
                   </button>
                 </div>
+
+                <button
+                  type="button"
+                  className="btn btn-secondary mt-2 w-100"
+                  onClick={onPaymentCancel}
+                  disabled={isProcessing}
+                >
+                  Cancel
+                </button>
               </form>
             </div>
           </div>
